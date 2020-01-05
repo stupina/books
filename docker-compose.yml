@@ -1,0 +1,22 @@
+version: '3.5'
+
+services:
+
+  db:
+    image: "postgres:latest"
+    env_file:
+      - env_file
+    volumes:
+      - "data-db:/var/lib/postgresql/data"
+
+  api:
+    build: ./api
+    env_file:
+      - env_file
+    depends_on:
+      - db
+    ports:
+      - '5000:5000'
+
+volumes:
+  data-db:
