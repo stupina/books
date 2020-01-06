@@ -56,4 +56,10 @@ class Author(Resource):
         return message, status_code
 
     def delete(self, id=None):
-        pass
+        if not id:
+            abort(400)
+        db_session.query(AuthorTable).filter_by(id=id).delete()
+        db_session.commit()
+        message = 'Author has been deleted'
+        status_code = 200
+        return message, status_code

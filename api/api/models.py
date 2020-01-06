@@ -7,8 +7,16 @@ from sqlalchemy.ext.hybrid import hybrid_property
 authors_books_rel = Table(
     'authors_books',
     Base.metadata,
-    Column('author_id', Integer, ForeignKey('author.id')),
-    Column('book_id', Integer, ForeignKey('book.id'))
+    Column(
+        'author_id',
+        Integer,
+        ForeignKey('author.id', ondelete='SET NULL'),
+    ),
+    Column(
+        'book_id',
+        Integer,
+        ForeignKey('book.id', ondelete='SET NULL'),
+    ),
 )
 
 

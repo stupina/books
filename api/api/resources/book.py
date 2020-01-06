@@ -32,6 +32,8 @@ class Book(Resource):
         name = args.get('name')
         if not id:
             book = BookTable(name=name)
+            db_session.add(book)
+            db_session.commit()
             message = f'New book with id = {book.id} has been created'
         else:
             book = db_session.query(BookTable).filter_by(id=id).first()
@@ -47,11 +49,16 @@ class Book(Resource):
             if not author:
                 author = AuthorTable(name=author_name)
             book.authors.append(author)
-        db_session.add(book)
         db_session.commit()
 
         status_code = 201
         return message, status_code
 
     def delete(self, id=None):
-        pass
+        if not id:
+            abort(400)
+        db_session.query(BookTable).filter_by(id=id).delete()
+        db_session.commit()
+        message = 'Book has been deleted'
+        status_code = 200
+        return message, status_code
