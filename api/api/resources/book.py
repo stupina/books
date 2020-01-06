@@ -13,7 +13,32 @@ class Book(Resource):
         pass
 
     def post(self):
-        pass
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('name')
+            parser.add_argument('author', action='append')
+            args = parser.parse_args()
+            args = BookInputSchema.load(args)
+        except ValidationError as err:
+            abort(400)
+
+        name = args.get('name')
+        book = BookTable(name=name)
+
+        authors = args.get('authors')
+        for author_name in authors:
+            author = db_session.query(AuthorTable).filter_by(
+                name=author_name,
+            ).first()
+            if not author:
+                author = AuthorTable(name=author_name)
+            book.authors.append(author)
+        db_session.add(book)
+        db_session.commit()
+
+        message = f'New book with id = {book.id} has been created'
+        status_code = 201
+        return message, status_code
 
     def put(self, id=None):
         pass
