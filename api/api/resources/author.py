@@ -10,7 +10,16 @@ from api.schemas import AuthorInputSchema, AuthorOutputSchema
 class Author(Resource):
 
     def get(self, id=None):
-        pass
+        if not id:
+            authors = (db_session.query(AuthorTable).all())
+        else:
+            authors = ([
+                db_session.query(AuthorTable).filter_by(id=id).first(),
+            ])
+        result = jsonify(
+            AuthorOutputSchema.dump(authors)
+        )
+        return result
 
     def post(self):
         try:
