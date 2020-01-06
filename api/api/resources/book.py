@@ -10,7 +10,14 @@ from api.schemas import BookInputSchema, BookOutputSchema
 class Book(Resource):
 
     def get(self, id=None):
-        pass
+        if not id:
+            books = (db_session.query(BookTable).all())
+        else:
+            books = ([db_session.query(BookTable).filter_by(id=id).first()])
+        result = jsonify(
+            BookOutputSchema.dump(books)
+        )
+        return result
 
     def post(self):
         try:
