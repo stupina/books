@@ -21,7 +21,7 @@ class Author(Resource):
         )
         return result
 
-    def post(self):
+    def post(self, id=None):
         try:
             parser = reqparse.RequestParser()
             parser.add_argument('name')
@@ -32,7 +32,14 @@ class Author(Resource):
             abort(400)
 
         name = args.get('name')
-        author = AuthorTable(name=name)
+        if not id:
+            author = AuthorTable(name=name)
+            message = f'New author with id = {author.id} has been created'
+        else:
+            author = db_session.query(AuthorTable).filter_by(id=id).first()
+            author.name = name
+            author.books.clear()
+            message = f'Author with id = {author.id} has been changed'
 
         books = args.get('books')
         for book_name in books:
@@ -45,12 +52,8 @@ class Author(Resource):
         db_session.add(author)
         db_session.commit()
 
-        message = f'New author with id = {author.id} has been created'
         status_code = 201
         return message, status_code
-
-    def put(self, id=None):
-        pass
 
     def delete(self, id=None):
         pass
