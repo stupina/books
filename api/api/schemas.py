@@ -75,3 +75,17 @@ class AuthorOutputSchema(Schema):
 AuthorSchema = AuthorSchema()
 AuthorInputSchema = AuthorInputSchema()
 AuthorOutputSchema = AuthorOutputSchema(many=True)
+
+
+class PaginationSchema(Schema):
+    page = fields.Int(
+        validate=validate.Range(min=1),
+        allow_none=True,
+    )
+    per_page = fields.Int(
+        validate=validate.Range(min=1),
+        allow_none=True,
+    )
+
+
+PaginationSchema = PaginationSchema()

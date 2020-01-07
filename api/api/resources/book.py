@@ -4,16 +4,31 @@ from marshmallow import ValidationError
 
 from api.db import db_session
 from api.models import AuthorTable, BookTable
-from api.schemas import BookInputSchema, BookOutputSchema
+from api.schemas import BookInputSchema, BookOutputSchema, PaginationSchema
 
 
 class Book(Resource):
 
     def get(self, id=None):
+        book_recs = db_session.query(BookTable)
         if not id:
-            books = (db_session.query(BookTable).all())
+            try:
+                parser = reqparse.RequestParser()
+                parser.add_argument('page')
+                parser.add_argument('per_page')
+                args = parser.parse_args()
+                args = PaginationSchema.load(args)
+            except ValidationError as err:
+                abort(400)
+
+            page = args.get('page')
+            if not page:
+                books = (book_recs.all())
+            else:
+                per_page = args.get('per_page') or 1
+                books = (book_recs.limit(per_page).offset((page-1)*per_page))
         else:
-            books = ([db_session.query(BookTable).filter_by(id=id).first()])
+            books = ([book_recs.filter_by(id=id).first()])
         result = jsonify(
             BookOutputSchema.dump(books)
         )
