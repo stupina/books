@@ -1,5 +1,5 @@
 from api.db import Base
-from sqlalchemy import Table, Column, ForeignKey, Integer, String
+from sqlalchemy import Table, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -20,24 +20,6 @@ authors_books_rel = Table(
 )
 
 
-class AuthorTable(Base):
-    __tablename__ = 'author'
-
-    id = Column(
-        Integer,
-        primary_key=True,
-    )
-    name = Column(
-        String(60),
-        unique=True,
-    )
-    books = relationship(
-        "BookTable",
-        secondary=authors_books_rel,
-        back_populates="authors",
-    )
-
-
 class BookTable(Base):
     __tablename__ = 'book'
 
@@ -50,25 +32,38 @@ class BookTable(Base):
         unique=True,
     )
     authors = relationship(
-        "AuthorTable",
+        'AuthorTable',
         secondary=authors_books_rel,
-        back_populates="books",
+        back_populates='books',
     )
-    rating_sum = Column(
+    number_of_ratings = Column(
         Integer,
         default=0,
     )
-    rating_num = Column(
-        Integer,
+    total_rating = Column(
+        Float,
         default=0,
     )
 
+
+class AuthorTable(Base):
+    __tablename__ = 'author'
+
+    id = Column(
+        Integer,
+        primary_key=True,
+    )
+    name = Column(
+        String(60),
+        unique=True,
+    )
+    books = relationship(
+        'BookTable',
+        secondary=authors_books_rel,
+        back_populates='authors',
+        order_by='desc(BookTable.total_rating)',
+    )
+
     @hybrid_property
-    def rating(self):
-        rating_sum = self.rating_sum
-        rating_num = self.rating_num
-        if not rating_num:
-            result = 0
-        else:
-            result = rating_sum / rating_num
-        return result
+    def top_5_books(self):
+        return self.books[:5]

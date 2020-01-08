@@ -7,6 +7,7 @@ class BookSchema(Schema):
         required=True,
         validate=validate.Length(max=60),
     )
+    total_rating = fields.Float(data_key='rating')
 
 
 class BookInputSchema(Schema):
@@ -27,6 +28,7 @@ class BookOutputSchema(Schema):
         required=True,
         validate=validate.Length(max=60),
     )
+    total_rating = fields.Float(data_key='rating')
     authors = fields.Nested(
         "AuthorSchema",
         many=True,
@@ -65,7 +67,7 @@ class AuthorOutputSchema(Schema):
         required=True,
         validate=validate.Length(max=60),
     )
-    books = fields.Nested(
+    top_5_books = fields.Nested(
         "BookSchema",
         many=True,
         required=True,
@@ -89,3 +91,12 @@ class PaginationSchema(Schema):
 
 
 PaginationSchema = PaginationSchema()
+
+
+class RatingSchema(Schema):
+    rating = fields.Int(
+        validate=validate.OneOf([1, 2, 3, 4, 5])
+    )
+
+
+RatingSchema = RatingSchema()

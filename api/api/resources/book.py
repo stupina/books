@@ -4,7 +4,12 @@ from marshmallow import ValidationError
 
 from api.db import db_session
 from api.models import AuthorTable, BookTable
-from api.schemas import BookInputSchema, BookOutputSchema, PaginationSchema
+from api.schemas import (
+    BookInputSchema,
+    BookOutputSchema,
+    PaginationSchema,
+    RatingSchema
+)
 
 
 class Book(Resource):
@@ -75,5 +80,31 @@ class Book(Resource):
         db_session.query(BookTable).filter_by(id=id).delete()
         db_session.commit()
         message = 'Book has been deleted'
+        status_code = 200
+        return message, status_code
+
+    def patch(self, id=None):
+        if not id:
+            abort(400)
+
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('rating')
+            args = parser.parse_args()
+            args = RatingSchema.load(args)
+        except ValidationError as err:
+            abort(400)
+
+        rating = args.get('rating')
+        book = db_session.query(BookTable).filter_by(id=id).first()
+        total_rating = book.total_rating
+        number_of_ratings = book.number_of_ratings
+        book.total_rating = (
+            (total_rating * number_of_ratings + rating)
+            / (number_of_ratings + 1)
+        )
+        book.number_of_ratings += 1
+        db_session.commit()
+        message = f'You voted for the book: {rating}'
         status_code = 200
         return message, status_code

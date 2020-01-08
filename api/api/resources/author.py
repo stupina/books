@@ -49,6 +49,8 @@ class Author(Resource):
         name = args.get('name')
         if not id:
             author = AuthorTable(name=name)
+            db_session.add(author)
+            db_session.commit()
             message = f'New author with id = {author.id} has been created'
         else:
             author = db_session.query(AuthorTable).filter_by(id=id).first()
