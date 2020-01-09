@@ -14,17 +14,13 @@ POSTGRES_USER=postgres_user
 POSTGRES_PASSWORD=postgres_user_password
 POSTGRES_DB=postgress_db_name
 APP_SECRET_KEY=app_secret_key
+FLASK_APP=main.py
 ```
 
-3. Initialize database
+3. Bring up the app
 ```bash
-docker-compose up -d db
-docker-compose run --rm api /bin/bash -c "python -c  'import api.db as db; db.init_db()'"
+docker-compose up -d
+docker-compose run --rm api /bin/bash -c "flask db init && flask db migrate && flask db upgrade"
 ```
 
-4. Bring up the app
-```bash
-docker-compose up
-```
-
-5. Browse to [link](http://localhost:5000) to see the app in action.
+4. Browse to [link](http://localhost:5000) to see the app in action.

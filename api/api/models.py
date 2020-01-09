@@ -1,63 +1,60 @@
-from api.db import Base
-from sqlalchemy import Table, Column, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from api.db import db
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
-authors_books_rel = Table(
+authors_books_rel = db.Table(
     'authors_books',
-    Base.metadata,
-    Column(
+    db.Column(
         'author_id',
-        Integer,
-        ForeignKey('author.id', ondelete='SET NULL'),
+        db.Integer,
+        db.ForeignKey('author.id', ondelete='SET NULL'),
+        primary_key=True,
     ),
-    Column(
+    db.Column(
         'book_id',
-        Integer,
-        ForeignKey('book.id', ondelete='SET NULL'),
+        db.Integer,
+        db.ForeignKey('book.id', ondelete='SET NULL'),
+        primary_key=True,
     ),
 )
 
 
-class BookTable(Base):
+class BookTable(db.Model):
     __tablename__ = 'book'
-
-    id = Column(
-        Integer,
+    id = db.Column(
+        db.Integer,
         primary_key=True,
     )
-    name = Column(
-        String(60),
+    name = db.Column(
+        db.String(60),
         unique=True,
     )
-    authors = relationship(
+    authors = db.relationship(
         'AuthorTable',
         secondary=authors_books_rel,
         back_populates='books',
     )
-    number_of_ratings = Column(
-        Integer,
+    number_of_ratings = db.Column(
+        db.Integer,
         default=0,
     )
-    total_rating = Column(
-        Float,
+    total_rating = db.Column(
+        db.Float,
         default=0,
     )
 
 
-class AuthorTable(Base):
+class AuthorTable(db.Model):
     __tablename__ = 'author'
-
-    id = Column(
-        Integer,
+    id = db.Column(
+        db.Integer,
         primary_key=True,
     )
-    name = Column(
-        String(60),
+    name = db.Column(
+        db.String(60),
         unique=True,
     )
-    books = relationship(
+    books = db.relationship(
         'BookTable',
         secondary=authors_books_rel,
         back_populates='authors',

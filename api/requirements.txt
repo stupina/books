@@ -1,5 +1,6 @@
 Flask
 flask_restful
 psycopg2
-SQLAlchemy
+flask_sqlalchemy
+flask_migrate
 marshmallow
