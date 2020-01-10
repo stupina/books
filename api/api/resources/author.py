@@ -1,4 +1,4 @@
-from flask import abort, jsonify
+from flask import abort, jsonify, make_response
 from flask_restful import Resource, reqparse
 from marshmallow import ValidationError
 
@@ -18,19 +18,17 @@ class Author(Resource):
                 parser.add_argument('per_page')
                 args = parser.parse_args()
                 args = PaginationSchema.load(args)
-            except ValidationError as err:
+            except ValidationError:
                 abort(400)
 
             page = args.get('page')
             if not page:
-                authors = (author_recs.all())
+                authors = author_recs.all()
             else:
                 per_page = args.get('per_page') or 1
-                authors = author_recs.paginate(page, per_page, error_out=False)
+                authors = author_recs.paginate(page, per_page).items
         else:
-            authors = ([
-                author_recs.filter_by(id=id).first(),
-            ])
+            authors = [author_recs.filter_by(id=id).first()]
         result = jsonify(
             AuthorOutputSchema.dump(authors)
         )
@@ -43,7 +41,7 @@ class Author(Resource):
             parser.add_argument('book', action='append')
             args = parser.parse_args()
             args = AuthorInputSchema.load(args)
-        except ValidationError as err:
+        except ValidationError:
             abort(400)
 
         name = args.get('name')
@@ -51,12 +49,10 @@ class Author(Resource):
             author = AuthorTable(name=name)
             db.session.add(author)
             db.session.commit()
-            message = f'New author with id = {author.id} has been created'
         else:
             author = AuthorTable.query.filter_by(id=id).first()
             author.name = name
             author.books.clear()
-            message = f'Author with id = {author.id} has been changed'
 
         books = args.get('books')
         for book_name in books:
@@ -68,14 +64,19 @@ class Author(Resource):
         db.session.commit()
 
         status_code = 201
-        return message, status_code
+        data = jsonify(
+            AuthorOutputSchema.dump([author])
+        )
+        response = make_response(data, status_code)
+        return response
 
     def delete(self, id=None):
         if not id:
             abort(400)
         author = AuthorTable.query.filter_by(id=id).first()
+        if not author:
+            abort(400)
         db.session.delete(author)
         db.session.commit()
-        message = 'Author has been deleted'
-        status_code = 200
-        return message, status_code
+        status_code = 204
+        return id, status_code

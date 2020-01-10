@@ -1,4 +1,4 @@
-from flask import abort, jsonify
+from flask import abort, jsonify, make_response
 from flask_restful import Resource, reqparse
 from marshmallow import ValidationError
 
@@ -23,17 +23,17 @@ class Book(Resource):
                 parser.add_argument('per_page')
                 args = parser.parse_args()
                 args = PaginationSchema.load(args)
-            except ValidationError as err:
+            except ValidationError:
                 abort(400)
 
             page = args.get('page')
             if not page:
-                books = (book_recs.all())
+                books = book_recs.all()
             else:
                 per_page = args.get('per_page') or 1
-                books = book_recs.paginate(page, per_page, error_out=False)
+                books = book_recs.paginate(page, per_page, error_out=False).items
         else:
-            books = ([book_recs.filter_by(id=id).first()])
+            books = [book_recs.filter_by(id=id).first()]
         result = jsonify(
             BookOutputSchema.dump(books)
         )
@@ -46,7 +46,7 @@ class Book(Resource):
             parser.add_argument('author', action='append')
             args = parser.parse_args()
             args = BookInputSchema.load(args)
-        except ValidationError as err:
+        except ValidationError:
             abort(400)
 
         name = args.get('name')
@@ -54,12 +54,10 @@ class Book(Resource):
             book = BookTable(name=name)
             db.session.add(book)
             db.session.commit()
-            message = f'New book with id = {book.id} has been created'
         else:
             book = BookTable.query.filter_by(id=id).first()
             book.name = name
             book.authors.clear()
-            message = f'Book with id = {book.id} has been changed'
 
         authors = args.get('authors')
         for author_name in authors:
@@ -72,17 +70,26 @@ class Book(Resource):
         db.session.commit()
 
         status_code = 201
-        return message, status_code
+        data = jsonify(
+            BookOutputSchema.dump([book])
+        )
+        response = make_response(data, status_code)
+        return response
 
     def delete(self, id=None):
         if not id:
             abort(400)
         book = BookTable.query.filter_by(id=id).first()
+        if not book:
+            abort(400)
         db.session.delete(book)
         db.session.commit()
-        message = 'Book has been deleted'
-        status_code = 200
-        return message, status_code
+        status_code = 204
+        data = jsonify(
+            {'id': id}
+        )
+        response = make_response(data, status_code)
+        return response
 
     def patch(self, id=None):
         if not id:
@@ -93,7 +100,7 @@ class Book(Resource):
             parser.add_argument('rating')
             args = parser.parse_args()
             args = RatingSchema.load(args)
-        except ValidationError as err:
+        except ValidationError:
             abort(400)
 
         rating = args.get('rating')
